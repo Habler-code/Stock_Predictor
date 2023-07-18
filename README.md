@@ -8,7 +8,10 @@ Trains an LSTM model on the data, and then uses the model to predict future stoc
 
 
 # Long Short-Term Memory (LSTM) #
-is an artificial recurrent neural network (RNN) architecture used in the field of deep learning. LSTM networks are well-suited to classifying, processing and making predictions based on time series data, since there can be lags of unknown duration between important events in a time series.
+LSTM is an artificial recurrent neural network (RNN) architecture used in the field of deep learning.
+
+LSTM networks are well-suited to classifying, processing and making predictions based on time series data, since there can be lags of unknown duration between important events in a time series.
+
 For more information about LSTMs: [LSTM](https://medium.com/@kangeugine/long-short-term-memory-lstm-concept-cb3283934359). 
 
 
