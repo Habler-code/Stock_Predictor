@@ -20,7 +20,7 @@ For more information about LSTMs: [LSTM](https://medium.com/@kangeugine/long-sho
 </p>
 
 
-# Disclaimer #
+**Disclaimer:**
 This script was built only for educational purposes. Do not use it for trading.
 
 Risk under your control.
