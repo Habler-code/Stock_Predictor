@@ -35,19 +35,25 @@ class StockPredictor:
 
         return X_train, y_train
 
-    def build_model(self, input_dim, hidden_dim, layer_dim, output_dim):
+    def build_model(self, X_train):
         model = Sequential()
-        model.add(LSTM(hidden_dim, return_sequences=True, input_shape=(None, input_dim)))
+        model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], 1)))
         model.add(Dropout(0.2))
-        for _ in range(layer_dim - 1):
-            model.add(LSTM(hidden_dim, return_sequences=True))
-            model.add(Dropout(0.2))
-        model.add(Dense(output_dim))
+        model.add(LSTM(units=50, return_sequences=True))
+        model.add(Dropout(0.2))
+        model.add(LSTM(units=50, return_sequences=True))
+        model.add(Dropout(0.2))
+        model.add(LSTM(units=50, return_sequences=True))
+        model.add(Dropout(0.2))
+        model.add(LSTM(units=50))
+        model.add(Dropout(0.2))
+        model.add(Dense(units=1))
         return model
 
-    def train_model(self, model, X_train, y_train, epochs=100, learning_rate=0.01):
-        model.compile(optimizer=Adam(learning_rate=learning_rate), loss='mean_squared_error')
-        history = model.fit(X_train, y_train, epochs=epochs, verbose=1)
+
+    def train_model(self, model, X_train, y_train, epochs=100, batch_size=32):
+        model.compile(optimizer='adam', loss='mean_squared_error')
+        history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1)
         return history
 
     def predict_stock_price(self, model, data, future_days):
@@ -58,19 +64,31 @@ class StockPredictor:
         inputs = self.scaler.transform(inputs)
 
         X_test = []
+        inputs_flattened = inputs.flatten()
 
         for i in range(future_days, len(inputs)):
-            X_test.append(inputs[i-future_days:i, 0])
+            X_test.append(inputs_flattened[i-future_days:i])
 
         X_test = np.array(X_test, dtype=object)
         X_test = np.vstack(X_test).astype(float)
         X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
-        predicted_stock_price = model.predict(X_test)
+        predicted_stock_price = []
+
+        for i in range(future_days):
+            prediction = model.predict(np.array([X_test[i, :]]))
+            predicted_stock_price.append(prediction)
+            
+            # Add the new prediction to X_test for use in next prediction
+            X_test = np.append(X_test, prediction)[1:]
+            X_test = np.reshape(X_test, (1, X_test.shape[0], 1))
+
+        predicted_stock_price = np.array(predicted_stock_price)
         predicted_stock_price = predicted_stock_price.reshape(predicted_stock_price.shape[0], -1)
         predicted_stock_price = self.scaler.inverse_transform(predicted_stock_price)
 
         return predicted_stock_price
+
 
 def main():
     ticker_symbol = input("Enter the ticker symbol of the stock: ")
@@ -82,7 +100,7 @@ def main():
     predictor.dataset_train = predictor.fetch_data(start_date, end_date)
     X_train, y_train = predictor.preprocess_data(predictor.dataset_train)
 
-    model = predictor.build_model(input_dim=1, hidden_dim=32, layer_dim=2, output_dim=1)
+    model = predictor.build_model(X_train)
     history = predictor.train_model(model, X_train, y_train)
 
     future_days = 20
